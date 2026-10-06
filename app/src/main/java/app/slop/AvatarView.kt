@@ -7,6 +7,8 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.View
@@ -77,7 +79,8 @@ class AvatarView @JvmOverloads constructor(
             val newJaw = Bitmap.createBitmap(layers.jaw, w, h, Bitmap.Config.ARGB_8888)
             val newLids = Bitmap.createBitmap(layers.lids, w, h, Bitmap.Config.ARGB_8888)
             val newMic = Bitmap.createBitmap(layers.mic, w, h, Bitmap.Config.ARGB_8888)
-            post {
+            // Se entrega por el hilo principal (sirve aunque la vista todavía no esté en pantalla).
+            Handler(Looper.getMainLooper()).post {
                 base = newBase
                 jaw = newJaw
                 lids = newLids
