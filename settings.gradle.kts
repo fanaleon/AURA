@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Aura"
+rootProject.name = "Slop"
 include(":app")

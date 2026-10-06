@@ -1,4 +1,4 @@
-package app.aura
+package app.slop
 
 import android.content.Context
 import android.os.Handler
@@ -17,12 +17,12 @@ enum class Phase { IDLE, LISTENING, THINKING, SPEAKING }
 object Conversation {
     val messages = ArrayList<ChatMsg>()
 
-    /** Últimos mensajes para mandar a Claude, empezando siempre por uno del usuario. */
+    /** Últimos mensajes para mandar a la IA, empezando siempre por uno del usuario. */
     fun forApi(): List<ChatMsg> = messages.takeLast(24).dropWhile { !it.fromUser }
 }
 
 /**
- * El "cerebro" de la asistente: escucha -> piensa (Claude) -> habla.
+ * El "cerebro" de la asistente: escucha -> piensa (Gemini o Claude) -> habla.
  * Todos los métodos y avisos corren en el hilo principal.
  */
 class Assistant(context: Context, private val ui: Ui) {
@@ -67,7 +67,7 @@ class Assistant(context: Context, private val ui: Ui) {
             ui.onPartial("")
             ui.onLevel(0f)
             if (Prefs.handsFree(ctx) && SpeechText.isStopPhrase(text, s.stopPhrases)) {
-                // En manos libres, "chau" o "gracias" cortan la ronda en vez de ir a Claude.
+                // En manos libres, "chau" o "gracias" cortan la ronda en vez de ir a la IA.
                 say(s.stopAck, thenListen = false)
             } else {
                 send(text)
@@ -156,7 +156,7 @@ class Assistant(context: Context, private val ui: Ui) {
     fun greetAndListen() {
         if (released || phase == Phase.THINKING || phase == Phase.LISTENING) return
         if (Prefs.apiKey(ctx).isBlank()) {
-            showError(s.noKey)
+            showError(s.noKey.forAi(Prefs.provider(ctx)))
             return
         }
         input.stop()
@@ -164,7 +164,7 @@ class Assistant(context: Context, private val ui: Ui) {
         say(s.greeting, thenListen = true)
     }
 
-    /** Manda un texto (dictado o escrito) a Claude y dice la respuesta. */
+    /** Manda un texto (dictado o escrito) a la IA elegida y dice la respuesta. */
     fun send(raw: String) {
         val text = raw.trim()
         if (released || text.isEmpty()) return
@@ -178,43 +178,67 @@ class Assistant(context: Context, private val ui: Ui) {
         Conversation.messages.add(mine)
         ui.onMessage(mine)
 
+        val provider = Prefs.provider(ctx)
         val key = Prefs.apiKey(ctx)
         if (key.isBlank()) {
             setPhase(Phase.IDLE)
-            showError(s.noKey)
+            showError(s.noKey.forAi(provider))
             return
         }
         showError(voiceNotice())
         setPhase(Phase.THINKING)
 
-        val web = Prefs.web(ctx)
-        val request = ClaudeApi.Request(
-            apiKey = key,
-            model = if (Prefs.fastModel(ctx)) ClaudeApi.MODEL_FAST else ClaudeApi.MODEL_SMART,
-            system = Prompts.system(lang, Prefs.name(ctx), web, nowText(), TimeZone.getDefault().id),
-            history = Conversation.forApi(),
-            web = web,
-            country = Locale.getDefault().country.takeIf { it.matches(COUNTRY) },
-            timeZone = TimeZone.getDefault().id.takeIf { it.contains('/') }
+        val web = Prefs.webActive(ctx)
+        val fast = Prefs.fastModel(ctx)
+        val locale = Locale.getDefault()
+        val zone = TimeZone.getDefault().id
+        val system = Prompts.system(
+            lang, Prefs.name(ctx), web, nowText(), zone, locale.getDisplayCountry(lang.formatLocale())
         )
+        val history = Conversation.forApi()
+        val ask: () -> Reply = when (provider) {
+            Provider.GEMINI -> {
+                val request = GeminiApi.Request(
+                    apiKey = key,
+                    searchKey = Prefs.searchKey(ctx),
+                    fast = fast,
+                    system = system,
+                    history = history,
+                    web = web
+                )
+                ({ GeminiApi.ask(request) })
+            }
+            Provider.CLAUDE -> {
+                val request = ClaudeApi.Request(
+                    apiKey = key,
+                    model = if (fast) ClaudeApi.MODEL_FAST else ClaudeApi.MODEL_SMART,
+                    system = system,
+                    history = history,
+                    web = web,
+                    country = locale.country.takeIf { it.matches(COUNTRY) },
+                    timeZone = zone.takeIf { it.contains('/') }
+                )
+                ({ ClaudeApi.ask(request) })
+            }
+        }
         val myTurn = ++turn
         io.execute {
-            var reply: ClaudeApi.Reply? = null
+            var reply: Reply? = null
             var failure: Exception? = null
             try {
-                reply = ClaudeApi.ask(request)
+                reply = ask()
             } catch (e: Exception) {
                 failure = e
             }
             main.post {
-                if (!released && myTurn == turn) onAnswer(reply, failure)
+                if (!released && myTurn == turn) onAnswer(reply, failure, provider)
             }
         }
     }
 
-    private fun onAnswer(reply: ClaudeApi.Reply?, failure: Exception?) {
+    private fun onAnswer(reply: Reply?, failure: Exception?, provider: Provider) {
         if (reply == null) {
-            val text = describe(failure)
+            val text = describe(failure, provider)
             showError(text)
             // Los avisos propios (sin conexión, key vencida, etc.) también los dice en voz alta;
             // los errores crudos de la API quedan solo en pantalla.
@@ -234,7 +258,11 @@ class Assistant(context: Context, private val ui: Ui) {
             text = text,
             sources = reply.sources,
             searched = reply.searched,
-            note = reply.webError?.let { s.webFailed + it }
+            note = when (reply.webIssue) {
+                WebIssue.SEARCH_KEY -> s.searchBadKey
+                WebIssue.SEARCH_QUOTA -> s.searchQuota
+                else -> reply.webError?.let { s.webFailed + it }
+            }
         )
         Conversation.messages.add(msg)
         ui.onMessage(msg)
@@ -263,21 +291,26 @@ class Assistant(context: Context, private val ui: Ui) {
     /** Si el celu no tiene voz para el idioma elegido, el aviso queda a la vista; si no, nada. */
     private fun voiceNotice(): String? = if (output.languageOk) null else s.ttsUnavailable
 
-    private fun describe(e: Exception?): String {
-        val api = e as? ApiException ?: return s.apiError + (e?.message ?: e?.javaClass?.simpleName ?: "?")
-        return when (api.kind) {
+    private fun describe(e: Exception?, provider: Provider): String {
+        val api = e as? ApiException
+            ?: return s.apiError.forAi(provider) + (e?.message ?: e?.javaClass?.simpleName ?: "?")
+        val text = when (api.kind) {
             ApiException.Kind.NO_NETWORK -> s.noConnection
             ApiException.Kind.TIMEOUT -> s.timeout
             ApiException.Kind.AUTH -> s.badKey
             ApiException.Kind.FORBIDDEN -> s.forbidden
-            ApiException.Kind.RATE_LIMIT -> s.rateLimited
+            // En Gemini el "demasiadas consultas" es el tope del plan gratis, no un apuro momentáneo.
+            ApiException.Kind.RATE_LIMIT -> if (provider == Provider.GEMINI) s.freeLimit else s.rateLimited
             ApiException.Kind.OVERLOADED -> s.overloaded
             ApiException.Kind.SERVER -> s.serverError
             ApiException.Kind.NO_CREDIT -> s.noCredit
             ApiException.Kind.WORKSPACE -> s.workspaceKey
+            ApiException.Kind.MODEL_GONE -> s.modelGone
+            // El detalle viene del servicio: va tal cual, sin pasar por forAi.
             ApiException.Kind.BAD_REQUEST,
-            ApiException.Kind.OTHER -> s.apiError + api.detail
+            ApiException.Kind.OTHER -> return s.apiError.forAi(provider) + api.detail
         }
+        return text.forAi(provider)
     }
 
     private fun nowText(): String {

@@ -1,4 +1,4 @@
-package app.aura
+package app.slop
 
 import android.content.Context
 import android.content.Intent
@@ -304,7 +304,7 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
         this.onFinished = onFinished
         hasFocus = audio.requestAudioFocus(focus) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         for ((i, part) in parts.withIndex()) {
-            val id = "aura-" + (++counter)
+            val id = "slop-" + (++counter)
             if (i == parts.lastIndex) lastUtterance = id
             val mode = if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
             if (engine.speak(part, mode, null, id) != TextToSpeech.SUCCESS) {

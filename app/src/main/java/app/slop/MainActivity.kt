@@ -1,4 +1,4 @@
-package app.aura
+package app.slop
 
 import android.Manifest
 import android.animation.ObjectAnimator
@@ -266,7 +266,8 @@ class MainActivity : Activity(), Assistant.Ui {
     }
 
     private fun renderChips() {
-        chipWeb.isSelected = Prefs.web(this)
+        // Se ve encendido solo si de verdad puede buscar (con Gemini hace falta la key de Tavily).
+        chipWeb.isSelected = Prefs.webActive(this)
         chipHands.isSelected = Prefs.handsFree(this)
     }
 
@@ -284,7 +285,14 @@ class MainActivity : Activity(), Assistant.Ui {
             }
         }
         chipWeb.setOnClickListener {
-            val on = !Prefs.web(this)
+            val on = !Prefs.webActive(this)
+            if (on && Prefs.needsSearchKey(this)) {
+                // Falta la key de Tavily: se avisa y se abren los ajustes para cargarla.
+                Prefs.setWeb(this, true)
+                toast(strings.searchKeyNeeded)
+                settings.show()
+                return@setOnClickListener
+            }
             Prefs.setWeb(this, on)
             renderChips()
             toast(if (on) strings.webOn else strings.webOff)
@@ -479,7 +487,7 @@ class MainActivity : Activity(), Assistant.Ui {
     }
 
     private fun addLink(source: Source, maxWidthPx: Int) {
-        val host = ClaudeApi.hostOf(source.url)
+        val host = Net.hostOf(source.url)
         val label = if (source.title.isBlank() || source.title == host) host else host + " · " + source.title
         val tv = TextView(this).apply {
             text = label
@@ -571,7 +579,7 @@ class MainActivity : Activity(), Assistant.Ui {
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()
 
     companion object {
-        const val ACTION_TALK = "app.aura.action.TALK"
+        const val ACTION_TALK = "app.slop.action.TALK"
         const val EXTRA_TALK = "talk"
         private const val REQUEST_MIC = 41
 

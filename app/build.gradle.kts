@@ -4,15 +4,15 @@ plugins {
 }
 
 android {
-    namespace = "app.aura"
+    namespace = "app.slop"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "app.aura"
+        applicationId = "app.slop"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "3.0"
     }
 
     // Firma fija para las builds de prueba: así cada APK nuevo se instala encima del anterior

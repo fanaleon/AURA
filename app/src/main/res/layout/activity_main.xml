@@ -47,7 +47,7 @@
     </LinearLayout>
 
     <!-- Resplandor naranja en los bordes: se enciende cuando escucha o habla. -->
-    <app.aura.GlowView
+    <app.slop.GlowView
         android:id="@+id/glow"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -123,7 +123,7 @@
             android:textColor="@color/orange"
             android:textSize="16sp" />
 
-        <app.aura.MaxHeightScrollView
+        <app.slop.MaxHeightScrollView
             android:id="@+id/chat_scroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -140,7 +140,7 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:paddingBottom="4dp" />
-        </app.aura.MaxHeightScrollView>
+        </app.slop.MaxHeightScrollView>
 
         <TextView
             android:id="@+id/error"
@@ -188,7 +188,7 @@
                 android:src="@drawable/ic_send"
                 android:tint="@color/orange" />
 
-            <app.aura.MicButton
+            <app.slop.MicButton
                 android:id="@+id/mic"
                 android:layout_width="76dp"
                 android:layout_height="76dp" />
