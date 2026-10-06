@@ -24,19 +24,33 @@ jobs:
           gradle-version: "8.7"
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+
+      # Si falla, deja los errores del compilador a la vista como anotaciones de la corrida.
+      - name: Show compile errors
+        if: failure()
+        run: |
+          grep -E "^e: |^ERROR:|AAPT: error" build.log | sed "s#file://$GITHUB_WORKSPACE/##" > errors.txt || true
+          head -n 9 errors.txt | while IFS= read -r line; do echo "::error::${line}"; done
+          if [ -s errors.txt ]; then
+            echo "::error title=Todos los errores ($(wc -l < errors.txt))::$(head -n 60 errors.txt | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+          else
+            echo "::error title=Motivo del fallo::$(grep -A 12 'What went wrong' build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+          fi
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Aura.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Slop.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Aura-apk
-          path: Aura.apk
+          name: Slop-apk
+          path: Slop.apk
 
       - name: Publish APK in a Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: aura-build-${{ github.run_number }}
-          name: Aura build ${{ github.run_number }}
-          files: Aura.apk
+          tag_name: slop-build-${{ github.run_number }}
+          name: Slop build ${{ github.run_number }}
+          files: Slop.apk

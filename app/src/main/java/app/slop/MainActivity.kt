@@ -1,9 +1,6 @@
-package app.aura
+package app.slop
 
 import android.Manifest
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -11,7 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Matrix
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -23,21 +19,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import kotlin.math.max
 
 /**
- * Pantalla de la asistente: la modelo de fondo, el chat abajo y el micrófono.
+ * Pantalla de la asistente: la modelo animada de fondo, el chat abajo y el micrófono.
  * Se abre desde el ícono o tocando el widget (en ese caso saluda y escucha).
  */
 class MainActivity : Activity(), Assistant.Ui {
@@ -47,7 +40,7 @@ class MainActivity : Activity(), Assistant.Ui {
     private lateinit var settings: SettingsSheet
 
     private lateinit var stage: View
-    private lateinit var avatar: ImageView
+    private lateinit var avatar: AvatarView
     private lateinit var glow: GlowView
     private lateinit var content: View
     private lateinit var topBar: View
@@ -64,7 +57,6 @@ class MainActivity : Activity(), Assistant.Ui {
     private lateinit var btnSend: ImageButton
     private lateinit var mic: MicButton
 
-    private var breathing: ObjectAnimator? = null
     private var pendingMicAction: (() -> Unit)? = null
     private var partial = ""
     private var started = false
@@ -85,7 +77,6 @@ class MainActivity : Activity(), Assistant.Ui {
         applyTexts()
         for (msg in Conversation.messages) addBubble(msg, animate = false)
         wireActions()
-        startBreathing()
 
         if (savedInstanceState == null) {
             wantGreet = isTalkRequest(intent)
@@ -109,20 +100,20 @@ class MainActivity : Activity(), Assistant.Ui {
         super.onStart()
         started = true
         assistant.setForeground(true)
-        breathing?.resume()
+        avatar.setRunning(true)
         if (wantGreet) greetFromWidget()
     }
 
     override fun onStop() {
         started = false
         assistant.setForeground(false)
-        breathing?.pause()
+        avatar.setRunning(false)
         super.onStop()
     }
 
     override fun onDestroy() {
         settings.dismiss()
-        breathing?.cancel()
+        avatar.setRunning(false)
         assistant.release()
         super.onDestroy()
     }
@@ -190,37 +181,10 @@ class MainActivity : Activity(), Assistant.Ui {
         globe.setBounds(0, 0, dp(16), dp(16))
         chipWeb.setCompoundDrawablesRelative(globe, null, null, null)
 
-        avatar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> fitAvatar() }
-        topBar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> fitAvatar() }
-    }
-
-    /**
-     * Escala la foto para cubrir la pantalla y la ubica de modo que la cabeza de la modelo
-     * empiece justo debajo de la barra superior (así los botones nunca le tapan la cara).
-     */
-    private fun fitAvatar() {
-        val d = avatar.drawable ?: return
-        val vw = avatar.width.toFloat()
-        val vh = avatar.height.toFloat()
-        val dw = d.intrinsicWidth.toFloat()
-        val dh = d.intrinsicHeight.toFloat()
-        if (vw <= 0f || vh <= 0f || dw <= 0f || dh <= 0f) return
-
-        val target = topBar.bottom + dp(8).toFloat()   // dónde debe quedar el borde superior del pelo
-        val hairY = dh * PHOTO_HAIR_TOP
-        var scale = max(vw / dw, (vh - target) / (dh - hairY))
-        var dy = target - hairY * scale
-        if (dy > 0f) {                                  // la foto no tiene tanto aire arriba: se alinea al tope
-            dy = 0f
-            scale = max(scale, vh / dh)
+        // El pelo de la modelo arranca justo debajo de la barra superior, así los botones no le tapan la cara.
+        topBar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            avatar.topInset = topBar.bottom + dp(8).toFloat()
         }
-        val m = Matrix()
-        m.setScale(scale, scale)
-        m.postTranslate((vw - dw * scale) / 2f, dy)
-        avatar.imageMatrix = m
-        // La respiración hace zoom alrededor de la cara.
-        avatar.pivotX = vw / 2f
-        avatar.pivotY = dy + dh * PHOTO_FACE * scale
     }
 
     /** Dibuja detrás de las barras del sistema y deja lugar para ellas y para el teclado. */
@@ -266,7 +230,8 @@ class MainActivity : Activity(), Assistant.Ui {
     }
 
     private fun renderChips() {
-        chipWeb.isSelected = Prefs.web(this)
+        // Se ve encendido solo si de verdad puede buscar (con Gemini hace falta la key de Tavily).
+        chipWeb.isSelected = Prefs.webActive(this)
         chipHands.isSelected = Prefs.handsFree(this)
     }
 
@@ -284,7 +249,14 @@ class MainActivity : Activity(), Assistant.Ui {
             }
         }
         chipWeb.setOnClickListener {
-            val on = !Prefs.web(this)
+            val on = !Prefs.webActive(this)
+            if (on && Prefs.needsSearchKey(this)) {
+                // Falta la key de Tavily: se avisa y se abren los ajustes para cargarla.
+                Prefs.setWeb(this, true)
+                toast(strings.searchKeyNeeded)
+                settings.show()
+                return@setOnClickListener
+            }
             Prefs.setWeb(this, on)
             renderChips()
             toast(if (on) strings.webOn else strings.webOff)
@@ -377,6 +349,7 @@ class MainActivity : Activity(), Assistant.Ui {
     // ---------------------------------------------------------------- avisos de la asistente
 
     override fun onPhase(phase: Phase) {
+        avatar.setPhase(phase)
         mic.phase = phase
         if (phase != Phase.LISTENING) {
             partial = ""
@@ -397,6 +370,7 @@ class MainActivity : Activity(), Assistant.Ui {
     }
 
     override fun onLevel(level: Float) {
+        avatar.setMicLevel(level)
         mic.level = level
         if (assistant.phase == Phase.LISTENING) glow.setBase(0.28f + 0.5f * level)
     }
@@ -410,9 +384,19 @@ class MainActivity : Activity(), Assistant.Ui {
         errorView.visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
     }
 
-    override fun onWord() {
+    override fun onSpeechStart(text: String, english: Boolean, atMs: Long) {
+        avatar.speechStart(text, english, atMs)
+    }
+
+    /** Cada palabra que dice: mueve la boca y da un latido al micrófono y al borde. */
+    override fun onSpeechRange(start: Int, end: Int, atMs: Long) {
+        avatar.speechRange(start, end, atMs)
         mic.pulse()
         glow.flash(0.22f, 260L)
+    }
+
+    override fun onSpeechEnd() {
+        avatar.speechEnd()
     }
 
     private fun renderStatus() {
@@ -479,7 +463,7 @@ class MainActivity : Activity(), Assistant.Ui {
     }
 
     private fun addLink(source: Source, maxWidthPx: Int) {
-        val host = ClaudeApi.hostOf(source.url)
+        val host = Net.hostOf(source.url)
         val label = if (source.title.isBlank() || source.title == host) host else host + " · " + source.title
         val tv = TextView(this).apply {
             text = label
@@ -512,21 +496,6 @@ class MainActivity : Activity(), Assistant.Ui {
 
     // ---------------------------------------------------------------- animaciones
 
-    /** Respiración suave y continua de la modelo. */
-    private fun startBreathing() {
-        breathing = ObjectAnimator.ofPropertyValuesHolder(
-            avatar,
-            PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.024f),
-            PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.024f)
-        ).apply {
-            duration = 3400L
-            repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.REVERSE
-            interpolator = AccelerateDecelerateInterpolator()
-            start()
-        }
-    }
-
     /** "Despertar": la modelo entra desde un zoom, sube el panel y destella el borde. */
     private fun playWakeUp() {
         stage.animate().cancel()
@@ -550,8 +519,9 @@ class MainActivity : Activity(), Assistant.Ui {
         glow.flash(1f, 1100L)
     }
 
-    /** Reacción al tocarla: un pequeño salto y un destello. */
+    /** Reacción al tocarla: levanta las cejas y sonríe, con un pequeño salto y un destello. */
     private fun bump() {
+        avatar.touch()
         stage.animate().cancel()
         stage.alpha = 1f
         stage.animate().scaleX(1.035f).scaleY(1.035f)
@@ -571,12 +541,8 @@ class MainActivity : Activity(), Assistant.Ui {
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()
 
     companion object {
-        const val ACTION_TALK = "app.aura.action.TALK"
+        const val ACTION_TALK = "app.slop.action.TALK"
         const val EXTRA_TALK = "talk"
         private const val REQUEST_MIC = 41
-
-        // Posiciones dentro de avatar_full.jpg, como fracción de su alto (850 x 1915 px):
-        private const val PHOTO_HAIR_TOP = 0.159f   // borde superior del pelo (y = 305)
-        private const val PHOTO_FACE = 0.219f       // centro de la cara (y = 420)
     }
 }

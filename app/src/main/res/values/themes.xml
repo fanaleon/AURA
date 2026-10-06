@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Aura" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Slop" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
@@ -12,7 +12,7 @@
     </style>
 
     <!-- Panel de ajustes: diálogo pegado abajo, con esquinas redondeadas arriba. -->
-    <style name="Theme.Aura.Sheet" parent="android:Theme.Material.Dialog">
+    <style name="Theme.Slop.Sheet" parent="android:Theme.Material.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">true</item>

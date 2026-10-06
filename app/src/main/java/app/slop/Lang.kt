@@ -1,4 +1,4 @@
-package app.aura
+package app.slop
 
 import java.util.Locale
 

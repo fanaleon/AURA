@@ -1,4 +1,4 @@
-package app.aura
+package app.slop
 
 import android.content.Context
 import android.content.Intent
@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -191,7 +192,20 @@ class VoiceInput(context: Context, private val callback: Callback) {
 }
 
 /** Lee las respuestas en voz alta con el motor de texto a voz del sistema. */
-class VoiceOutput(context: Context, private val onWord: () -> Unit) {
+class VoiceOutput(context: Context, private val listener: Listener) {
+
+    /** Avisos del avance de la voz, en el hilo principal. Los tiempos son de SystemClock.uptimeMillis(). */
+    interface Listener {
+        /** Empezó a sonar un tramo: [text] es exactamente lo que se le pasó al motor de voz. */
+        fun onSpeechStart(text: String, atMs: Long)
+
+        /** Está por decir las letras [start, end) del tramo en curso (normalmente, una palabra). */
+        fun onSpeechRange(start: Int, end: Int, atMs: Long)
+
+        /** Terminó de hablar o la cortaron. */
+        fun onSpeechEnd()
+    }
+
 
     private enum class State { STARTING, READY, FAILED }
 
@@ -216,6 +230,7 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
     private var queued: Queued? = null
     private var onFinished: (() -> Unit)? = null
     private var lastUtterance = ""
+    private val texts = java.util.concurrent.ConcurrentHashMap<String, String>()   // texto de cada tramo en curso
     private var counter = 0
     private var hasFocus = false
 
@@ -224,7 +239,11 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
         private set
 
     private val progress = object : UtteranceProgressListener() {
-        override fun onStart(utteranceId: String?) {}
+        override fun onStart(utteranceId: String?) {
+            val text = texts[utteranceId ?: return] ?: return
+            val at = SystemClock.uptimeMillis()
+            main.post { if (onFinished != null && texts.containsKey(utteranceId)) listener.onSpeechStart(text, at) }
+        }
 
         override fun onDone(utteranceId: String?) = finish(utteranceId)
 
@@ -234,7 +253,9 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
         override fun onError(utteranceId: String?, errorCode: Int) = finish(utteranceId)
 
         override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
-            main.post { if (onFinished != null) onWord() }
+            if (utteranceId == null) return
+            val at = SystemClock.uptimeMillis()
+            main.post { if (onFinished != null && texts.containsKey(utteranceId)) listener.onSpeechRange(start, end, at) }
         }
     }
 
@@ -304,7 +325,8 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
         this.onFinished = onFinished
         hasFocus = audio.requestAudioFocus(focus) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         for ((i, part) in parts.withIndex()) {
-            val id = "aura-" + (++counter)
+            val id = "slop-" + (++counter)
+            texts[id] = part
             if (i == parts.lastIndex) lastUtterance = id
             val mode = if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
             if (engine.speak(part, mode, null, id) != TextToSpeech.SUCCESS) {
@@ -321,7 +343,9 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
                 val callback = onFinished
                 onFinished = null
                 lastUtterance = ""
+                texts.clear()
                 releaseFocus()
+                listener.onSpeechEnd()
                 callback?.invoke()
             }
         }
@@ -330,8 +354,11 @@ class VoiceOutput(context: Context, private val onWord: () -> Unit) {
     /** Corta lo que esté diciendo, sin avisar. */
     fun stop() {
         queued = null
+        val wasSpeaking = onFinished != null
         onFinished = null
         lastUtterance = ""
+        texts.clear()
+        if (wasSpeaking) listener.onSpeechEnd()
         try {
             tts?.stop()
         } catch (e: Exception) {

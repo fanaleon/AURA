@@ -57,6 +57,71 @@
                 style="@style/Toggle" />
         </LinearLayout>
 
+        <!-- Con qué IA piensa -->
+        <TextView
+            android:id="@+id/set_provider_label"
+            style="@style/SettingLabel" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/set_provider_gemini"
+                style="@style/Toggle" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:id="@+id/set_provider_claude"
+                style="@style/Toggle" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/set_provider_help"
+            style="@style/SettingHelp" />
+
+        <!-- API key -->
+        <TextView
+            android:id="@+id/set_key_label"
+            style="@style/SettingLabel" />
+
+        <EditText
+            android:id="@+id/set_key"
+            style="@style/SettingField"
+            android:importantForAutofill="no"
+            android:inputType="textPassword" />
+
+        <TextView
+            android:id="@+id/set_key_help"
+            style="@style/SettingHelp" />
+
+        <!-- Key de Tavily: solo con Gemini, que la necesita para buscar en internet -->
+        <LinearLayout
+            android:id="@+id/set_search_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/set_search_label"
+                style="@style/SettingLabel" />
+
+            <EditText
+                android:id="@+id/set_search_key"
+                style="@style/SettingField"
+                android:importantForAutofill="no"
+                android:inputType="textPassword" />
+
+            <TextView
+                android:id="@+id/set_search_help"
+                style="@style/SettingHelp" />
+        </LinearLayout>
+
         <!-- Internet -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -88,33 +153,6 @@
                 android:layout_marginStart="12dp" />
         </LinearLayout>
 
-        <!-- Nombre -->
-        <TextView
-            android:id="@+id/set_name_label"
-            style="@style/SettingLabel" />
-
-        <EditText
-            android:id="@+id/set_name"
-            style="@style/SettingField"
-            android:importantForAutofill="no"
-            android:inputType="textCapWords"
-            android:maxLength="24" />
-
-        <!-- API key -->
-        <TextView
-            android:id="@+id/set_key_label"
-            style="@style/SettingLabel" />
-
-        <EditText
-            android:id="@+id/set_key"
-            style="@style/SettingField"
-            android:importantForAutofill="no"
-            android:inputType="textPassword" />
-
-        <TextView
-            android:id="@+id/set_key_help"
-            style="@style/SettingHelp" />
-
         <!-- Modelo -->
         <TextView
             android:id="@+id/set_model_label"
@@ -142,6 +180,18 @@
         <TextView
             android:id="@+id/set_model_help"
             style="@style/SettingHelp" />
+
+        <!-- Nombre -->
+        <TextView
+            android:id="@+id/set_name_label"
+            style="@style/SettingLabel" />
+
+        <EditText
+            android:id="@+id/set_name"
+            style="@style/SettingField"
+            android:importantForAutofill="no"
+            android:inputType="textCapWords"
+            android:maxLength="24" />
 
         <!-- Widget animado -->
         <LinearLayout

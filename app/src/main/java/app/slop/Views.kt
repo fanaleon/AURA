@@ -1,4 +1,4 @@
-package app.aura
+package app.slop
 
 import android.animation.ValueAnimator
 import android.content.Context
