@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Tap your assistant to talk to her</string>
+    <string name="widget_cta_0">Tap me</string>
+    <string name="widget_cta_1">What do you need?</string>
+    <string name="widget_cta_2">Let\'s talk</string>
+</resources>

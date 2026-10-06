@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Versión fija del botón de micrófono (widget sin animación). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M24,7a17,17 0 1 1 0,34a17,17 0 1 1 0,-34z"
+        android:strokeAlpha="0.55"
+        android:strokeColor="#FFFF7A1A"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="#FFFF7A1A"
+        android:pathData="M24,12a12,12 0 1 1 0,24a12,12 0 1 1 0,-24z" />
+    <group
+        android:scaleX="0.62"
+        android:scaleY="0.62"
+        android:translateX="16.56"
+        android:translateY="16.9">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M12,2.5a3,3 0 0 1 3,3v5.5a3,3 0 0 1 -6,0v-5.5a3,3 0 0 1 3,-3z" />
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M6.2,11a5.8,5.8 0 0 0 11.6,0M12,16.8v3.7M9,20.5h6"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="1.8" />
+    </group>
+</vector>

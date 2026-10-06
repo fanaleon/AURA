@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Banda de luz que cruza el widget cada tanto. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:centerColor="#A6FFF1E3"
+        android:endColor="#00FFF1E3"
+        android:startColor="#00FFF1E3" />
+</shape>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aura</string>
+    <!-- Textos del selector de widgets y del estado inicial del widget.
+         El resto de los textos vive en Texts.kt porque el idioma se elige dentro de la app. -->
+    <string name="widget_description">Tocá a tu asistente para hablarle</string>
+    <string name="widget_cta_0">Tocame</string>
+    <string name="widget_cta_1">¿Qué necesitás?</string>
+    <string name="widget_cta_2">Hablemos</string>
+</resources>

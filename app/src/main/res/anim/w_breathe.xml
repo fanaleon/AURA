@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Respiración" de la modelo en el widget: acerca y aleja suave (ida y vuelta = 6 s).
+     El ViewFlipper que la contiene la vuelve a disparar cada 6,2 s. -->
+<scale xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="3000"
+    android:fromXScale="1.0"
+    android:fromYScale="1.0"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+    android:pivotX="50%"
+    android:pivotY="30%"
+    android:repeatCount="1"
+    android:repeatMode="reverse"
+    android:toXScale="1.05"
+    android:toYScale="1.05" />

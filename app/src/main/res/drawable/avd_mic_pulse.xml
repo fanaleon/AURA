@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/vd_mic_pulse">
+    <target
+        android:name="ring_a_group"
+        android:animation="@animator/pulse_scale" />
+    <target
+        android:name="ring_a"
+        android:animation="@animator/pulse_fade" />
+    <target
+        android:name="ring_b_group"
+        android:animation="@animator/pulse_scale_late" />
+    <target
+        android:name="ring_b"
+        android:animation="@animator/pulse_fade_late" />
+</animated-vector>

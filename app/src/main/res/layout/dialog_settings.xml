@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Panel de ajustes. Los textos se cargan desde Texts.kt según el idioma elegido. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/sheet_bg"
+    android:overScrollMode="never"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:descendantFocusability="beforeDescendants"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="24dp">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/sheet_handle" />
+
+        <TextView
+            android:id="@+id/set_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-black"
+            android:textColor="@color/text"
+            android:textSize="24sp" />
+
+        <!-- Idioma -->
+        <TextView
+            android:id="@+id/set_lang_label"
+            style="@style/SettingLabel" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/set_lang_es"
+                style="@style/Toggle" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:id="@+id/set_lang_en"
+                style="@style/Toggle" />
+        </LinearLayout>
+
+        <!-- Internet -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/set_web_label"
+                    style="@style/SettingLabel"
+                    android:layout_marginTop="0dp" />
+
+                <TextView
+                    android:id="@+id/set_web_help"
+                    style="@style/SettingHelp" />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/set_web"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <!-- Nombre -->
+        <TextView
+            android:id="@+id/set_name_label"
+            style="@style/SettingLabel" />
+
+        <EditText
+            android:id="@+id/set_name"
+            style="@style/SettingField"
+            android:importantForAutofill="no"
+            android:inputType="textCapWords"
+            android:maxLength="24" />
+
+        <!-- API key -->
+        <TextView
+            android:id="@+id/set_key_label"
+            style="@style/SettingLabel" />
+
+        <EditText
+            android:id="@+id/set_key"
+            style="@style/SettingField"
+            android:importantForAutofill="no"
+            android:inputType="textPassword" />
+
+        <TextView
+            android:id="@+id/set_key_help"
+            style="@style/SettingHelp" />
+
+        <!-- Modelo -->
+        <TextView
+            android:id="@+id/set_model_label"
+            style="@style/SettingLabel" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/set_model_smart"
+                style="@style/Toggle" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:id="@+id/set_model_fast"
+                style="@style/Toggle" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/set_model_help"
+            style="@style/SettingHelp" />
+
+        <!-- Widget animado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/set_anim_label"
+                    style="@style/SettingLabel"
+                    android:layout_marginTop="0dp" />
+
+                <TextView
+                    android:id="@+id/set_anim_help"
+                    style="@style/SettingHelp" />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/set_anim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/set_save"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/btn_primary"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:textColor="@color/on_orange"
+            android:textSize="16sp" />
+    </LinearLayout>
+</ScrollView>

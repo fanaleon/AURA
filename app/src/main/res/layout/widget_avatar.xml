@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget animado. Todo se anima dentro del launcher, sin que la app esté corriendo:
+     - w_breath: un ViewFlipper de un solo hijo re-dispara la "respiración" de la foto.
+     - w_shine: cada dos vueltas pasa una banda de luz.
+     - w_pulse: un ProgressBar anima el vector del micrófono (anillos que se expanden).
+     - w_captions: frases que rotan invitando a tocar.
+     - w_border: borde naranja que late.
+     Al tocarlo: se hunde (stateListAnimator), hace ripple y abre la asistente. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:clipToOutline="true"
+    android:foreground="@drawable/widget_ripple"
+    android:stateListAnimator="@animator/widget_press">
+
+    <ViewFlipper
+        android:id="@+id/w_breath"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoStart="true"
+        android:flipInterval="6200"
+        android:inAnimation="@anim/w_breathe">
+
+        <ImageView
+            android:id="@+id/w_photo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/w_tall" />
+    </ViewFlipper>
+
+    <ViewFlipper
+        android:id="@+id/w_shine"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoStart="true"
+        android:flipInterval="2900"
+        android:inAnimation="@anim/w_sweep">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null" />
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="-56dp"
+            android:layout_marginBottom="-56dp"
+            android:background="@drawable/widget_shine"
+            android:contentDescription="@null"
+            android:rotation="16" />
+    </ViewFlipper>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/widget_scrim"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="7dp"
+        android:paddingEnd="9dp"
+        android:paddingBottom="7dp">
+
+        <ProgressBar
+            android:id="@+id/w_pulse"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:indeterminate="true"
+            android:indeterminateDrawable="@drawable/avd_mic_pulse"
+            android:indeterminateOnly="true"
+            android:indeterminateTint="@empty"
+            android:maxWidth="38dp"
+            android:maxHeight="38dp"
+            android:minWidth="38dp"
+            android:minHeight="38dp" />
+
+        <ViewFlipper
+            android:id="@+id/w_captions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:autoStart="true"
+            android:flipInterval="2600"
+            android:inAnimation="@anim/w_cap_in"
+            android:outAnimation="@anim/w_cap_out">
+
+            <TextView
+                android:id="@+id/w_cap0"
+                style="@style/WidgetCaption"
+                android:text="@string/widget_cta_0" />
+
+            <TextView
+                android:id="@+id/w_cap1"
+                style="@style/WidgetCaption"
+                android:text="@string/widget_cta_1" />
+
+            <TextView
+                android:id="@+id/w_cap2"
+                style="@style/WidgetCaption"
+                android:text="@string/widget_cta_2" />
+        </ViewFlipper>
+    </LinearLayout>
+
+    <ViewFlipper
+        android:id="@+id/w_border"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:autoStart="true"
+        android:flipInterval="2300"
+        android:inAnimation="@anim/w_border_pulse">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_border"
+            android:contentDescription="@null" />
+    </ViewFlipper>
+</FrameLayout>

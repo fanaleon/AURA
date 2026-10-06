@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Degradé inferior: deja ver a la modelo arriba y oscurece la zona del chat. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:centerColor="#D907070D"
+        android:centerY="0.45"
+        android:endColor="#FF07070D"
+        android:startColor="#0007070D" />
+</shape>

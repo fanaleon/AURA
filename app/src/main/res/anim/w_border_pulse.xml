@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Latido del borde naranja (ida y vuelta = 2,2 s). -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="1100"
+    android:fromAlpha="1.0"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+    android:repeatCount="1"
+    android:repeatMode="reverse"
+    android:toAlpha="0.2" />

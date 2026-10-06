@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Versión fija del widget (se usa si apagás "Widget animado" y como vista previa). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:clipToOutline="true"
+    android:foreground="@drawable/widget_ripple"
+    android:stateListAnimator="@animator/widget_press">
+
+    <ImageView
+        android:id="@+id/w_photo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:src="@drawable/w_tall" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/widget_scrim"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="7dp"
+        android:paddingEnd="9dp"
+        android:paddingBottom="7dp">
+
+        <ImageView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_mic_badge" />
+
+        <TextView
+            android:id="@+id/w_cap0"
+            style="@style/WidgetCaption"
+            android:layout_width="0dp"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:text="@string/widget_cta_1" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_border"
+        android:contentDescription="@null" />
+</FrameLayout>
