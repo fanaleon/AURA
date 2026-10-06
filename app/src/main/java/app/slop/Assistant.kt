@@ -33,7 +33,13 @@ class Assistant(context: Context, private val ui: Ui) {
         fun onLevel(level: Float)
         fun onMessage(msg: ChatMsg)
         fun onError(text: String?)
-        fun onWord()
+        /** Empezó a decir [text] (ya sin markdown); los tiempos son de SystemClock.uptimeMillis(). */
+        fun onSpeechStart(text: String, english: Boolean, atMs: Long)
+
+        /** Está por decir las letras [start, end) de ese texto. */
+        fun onSpeechRange(start: Int, end: Int, atMs: Long)
+
+        fun onSpeechEnd()
     }
 
     private val ctx = context.applicationContext
@@ -51,7 +57,19 @@ class Assistant(context: Context, private val ui: Ui) {
     var phase = Phase.IDLE
         private set
 
-    private val output = VoiceOutput(ctx) { if (!released) ui.onWord() }
+    private val output = VoiceOutput(ctx, object : VoiceOutput.Listener {
+        override fun onSpeechStart(text: String, atMs: Long) {
+            if (!released) ui.onSpeechStart(text, lang == Lang.EN, atMs)
+        }
+
+        override fun onSpeechRange(start: Int, end: Int, atMs: Long) {
+            if (!released) ui.onSpeechRange(start, end, atMs)
+        }
+
+        override fun onSpeechEnd() {
+            if (!released) ui.onSpeechEnd()
+        }
+    })
 
     private val input = VoiceInput(ctx, object : VoiceInput.Callback {
         override fun onPartial(text: String) {

@@ -1,7 +1,12 @@
 # Slop
 
-Asistente por voz para Android con tu modelo como widget animado. Funciona gratis con Gemini.
+Asistente por voz para Android con tu modelo animada: mueve la boca al hablar, parpadea, gesticula
+y respira. Funciona gratis con Gemini.
 
+- **Cara y cuerpo animados**: dentro de la app la foto cobra vida. La mandíbula y los labios siguen
+  a la voz palabra por palabra; parpadea, mueve los ojos y las cejas, inclina y gira la cabeza,
+  respira y se balancea. Al escuchar se acerca en primer plano y ladea la cabeza; al pensar mira
+  hacia arriba; al tocarla levanta las cejas y sonríe.
 - **Widget animado**: la modelo "respira", cada tanto la cruza un destello, el borde naranja late,
   el micrófono emite anillos y rotan frases que invitan a tocarla. Todo corre dentro del launcher,
   sin que la app esté abierta.
@@ -82,32 +87,60 @@ anterior y no hereda sus ajustes. Desinstalá Aura, instalá Slop, cargá las ke
   (motor "Servicios de voz de Google").
 - **No escucha**: revisá el permiso de micrófono y que "Servicios de voz de Google" o la app de Google estén activos.
 - **El widget no se mueve**: algunos launchers pausan las animaciones con el ahorro de batería activado.
+- **La boca se mueve pero no acompaña bien a la voz**: depende del motor de voz del celu. Con
+  "Servicios de voz de Google" avisa cada palabra y queda sincronizada; con otros motores va por ritmo estimado.
 - **Con Claude, dice que no pudo usar internet**: la búsqueda web está desactivada para tu cuenta en
   platform.claude.com (Settings › Capabilities). Mientras tanto responde igual, sin buscar.
 
+## Cómo funciona la animación
+
+No es un video: es la foto, deformada en tiempo real. La app la dibuja en capas (cuerpo, cara,
+interior de la boca, mandíbula, párpados y micrófono) y mueve cada una con una malla.
+
+- **Boca**: al empezar una frase se calcula la forma de boca de cada letra (en español se escribe
+  casi como suena). El motor de voz avisa palabra por palabra por dónde va y la boca se acomoda a
+  ese ritmo. Con motores que no avisan, se mueve igual con el ritmo estimado.
+- **Micrófono**: la modelo lo tiene justo delante de la boca. Va fijo a la cabeza y la mandíbula se
+  mueve por detrás, así que lo que se ve articular es el mentón, el labio de abajo a los costados de
+  la cápsula y la comisura. La piel y el labio que tapa el micrófono están reconstruidos.
+- **Encuadre**: cuerpo entero en reposo; primer plano mientras conversa y unos segundos después.
+- **Widget**: la pantalla de inicio no permite este tipo de animación, así que el widget sigue con
+  las suyas (respira, destello, micrófono con anillos) y la cara animada vive dentro de la app.
+
 ## Cambiar la foto
 
-Reemplazá estos archivos en `app/src/main/res/drawable-nodpi/` manteniendo nombre y proporción:
+Los widgets y el ícono se cambian reemplazando estos archivos en `app/src/main/res/drawable-nodpi/`,
+manteniendo nombre y proporción:
 
 | Archivo | Tamaño | Uso |
 | --- | --- | --- |
-| `avatar_full.jpg` | 850 × 1915 | Fondo de la app (cuerpo entero, con aire arriba de la cabeza) |
 | `w_tall.jpg` | 540 × 960 | Widget alto |
 | `w_mid.jpg` | 540 × 675 | Widget intermedio |
 | `w_square.jpg` | 520 × 520 | Widget cuadrado |
 | `w_wide.jpg` | 850 × 425 | Widget apaisado |
 | `ic_launcher_bg.jpg` | 432 × 432 | Ícono de la app (cara centrada) |
 
-Si en `avatar_full.jpg` la cabeza queda a otra altura, ajustá `PHOTO_HAIR_TOP` y `PHOTO_FACE`
-al final de `MainActivity.kt`.
+La modelo animada de la app es otra historia: no alcanza con cambiar el archivo, porque la animación
+necesita saber dónde está cada rasgo de **esa** foto. Para otra imagen hay que:
+
+1. Medir de nuevo las posiciones (boca, ojos, cejas, mentón, cuello) y cargarlas en `FaceMap`,
+   al principio de `FaceRig.kt`.
+2. Ajustar `tools/make_head_assets.py`, que genera `avatar_full.jpg`, `head.jpg` y `head_mic.png`
+   a partir de `tools/modelo_original.jpg`, y volver a correrlo.
+
+Es un trabajo fino (acá se hizo midiendo la foto píxel por píxel); conviene pedirlo con la foto nueva.
 
 ## Cómo está armado
 
 La app no usa bibliotecas externas: solo el framework de Android y Kotlin.
 
-- `MainActivity.kt` — pantalla, chat y animaciones.
+- `MainActivity.kt` — pantalla y chat.
+- `AvatarView.kt` — dibuja a la modelo animada, cuadro a cuadro.
+- `Performer.kt` — la "actuación": qué gesto hace en cada estado, parpadeos, mirada y encuadre.
+- `LipSync.kt` — de texto a formas de boca, al ritmo de la voz.
+- `FaceRig.kt` — de la pose a las mallas, y `FaceMap` con las medidas de la foto.
 - `Assistant.kt` — el ciclo escuchar › pensar › hablar, y a qué IA le pregunta.
-- `Voice.kt` — reconocimiento de voz y texto a voz.
+- `Voice.kt` — reconocimiento de voz y texto a voz (avisa cada palabra que dice).
 - `GeminiApi.kt` — llamada a Gemini (modelos `gemini-3.8-flash` y `gemini-3.5-flash-lite`). Cuando
   Gemini pide buscar, la app consulta Tavily y le devuelve los resultados.
 - `Tavily.kt` — búsqueda en internet para Gemini.

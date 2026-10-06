@@ -8,19 +8,16 @@
     android:focusableInTouchMode="true">
 
     <!-- La modelo, a pantalla completa. "stage" se anima al despertarla o tocarla;
-         "avatar" respira de fondo. -->
+         "avatar" la dibuja animada: respira, parpadea y mueve la boca al hablar. -->
     <FrameLayout
         android:id="@+id/stage"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ImageView
+        <app.slop.AvatarView
             android:id="@+id/avatar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="matrix"
-            android:src="@drawable/avatar_full" />
+            android:layout_height="match_parent" />
     </FrameLayout>
 
     <View

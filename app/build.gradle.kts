@@ -11,8 +11,8 @@ android {
         applicationId = "app.slop"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "3.0"
+        versionCode = 4
+        versionName = "3.1"
     }
 
     // Firma fija para las builds de prueba: así cada APK nuevo se instala encima del anterior
